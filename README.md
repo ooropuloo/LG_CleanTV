@@ -15,7 +15,14 @@
 |---|---|
 | ![場景設定](docs/images/scenes.jpg) | ![AI 助手](docs/images/assistant.jpg) |
 
-完整影片(1080p 無縫循環):[`cats/video/`](cats/video/) · 介紹海報:[docs/images/poster.jpg](docs/images/poster.jpg)
+完整影片(1080p 無縫循環):[`cats/video/`](cats/video/)
+
+<details>
+<summary>介紹海報</summary>
+
+<img src="docs/images/poster.jpg" width="480" alt="貓咪首頁海報">
+
+</details>
 
 > 截圖中的溫度、狀態為模擬資料。
 
