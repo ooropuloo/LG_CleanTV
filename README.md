@@ -5,7 +5,19 @@
 真正的介面放在家裡一台一直開著的主機上(Docker 容器「bridge」),所以 Home Assistant 的 token、Gemini 金鑰都不會進到電視。
 主機上還可以跑一個「場景工廠」,每週自動用 agy(Google Antigravity CLI)生出新的貓場景、自動檢查後上架。
 
-> 效果圖與影片之後補上。
+> ![貓咪首頁](docs/images/home.jpg)
+
+| 會動的貓(眼睛、尾巴、耳朵、呼吸) | 耳機女孩・雨夜(雨痕、城市光點) |
+|---|---|
+| ![動畫風虎斑](docs/images/demo_pixar_tabby.gif) | ![耳機女孩雨夜](docs/images/demo_heroine_evening.gif) |
+
+| 換場景(8 種內建 + 主機自動生成) | AI 助手(說話找 YouTube、控制家裡) |
+|---|---|
+| ![場景設定](docs/images/scenes.jpg) | ![AI 助手](docs/images/assistant.jpg) |
+
+完整影片(1080p 無縫循環):[`cats/video/`](cats/video/) · 介紹海報:[docs/images/poster.jpg](docs/images/poster.jpg)
+
+> 截圖中的溫度、狀態為模擬資料。
 
 ## 功能
 - **活圖貓背景**:一張 16:9 的圖 + 預先烘焙的網格權重,WebGL2 每格約 1 ms。貓的眼珠會**看著目前選到的 App 磚**,耳朵抖動、
