@@ -196,4 +196,9 @@ Chrome 不在預設位置時設 `CHROME=<chrome 執行檔路徑>`(`dev/shot.mjs`
 | `vendor/` | three.js(MIT) |
 
 ## 授權
-本 repo 尚未選定授權(`LICENSE` 待作者決定)。第三方程式碼(three.js、改寫自 couch-tv 的部分)見 `THIRD_PARTY.md`。
+本專案以 **GNU General Public License v3.0(GPL-3.0)** 授權,全文見 [`LICENSE`](LICENSE)。
+你可以自由使用、修改、再發布;但再發布(含修改版)時必須同樣以 GPL-3.0 開放原始碼,並保留著作權與授權聲明。
+
+第三方程式碼維持原本的授權:three.js(MIT,`vendor/LICENSE`)、改寫自 couch-tv 的部分(MIT,檔案內保留原聲明),詳見 `THIRD_PARTY.md`。MIT 授權的程式碼可以合併進 GPL-3.0 專案。
+
+Copyright (C) 2026 ooropuloo

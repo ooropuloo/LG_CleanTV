@@ -1,5 +1,7 @@
 # 第三方程式碼與授權
 
+本專案整體以 GPL-3.0 授權(見 `LICENSE`);以下第三方程式碼保留各自的 MIT 授權與著作權聲明。
+
 ## three.js — MIT
 `vendor/three.module.js`、`vendor/three.core.js`、`vendor/OrbitControls.js`、`vendor/BufferGeometryUtils.js` 來自
 [three.js](https://github.com/mrdoob/three.js),MIT 授權,原文見 `vendor/LICENSE`(Copyright © 2010-2025 three.js authors)。
