@@ -25,6 +25,28 @@
 - **舊電視也能用**:webOS 4.x(Chrome 53)自動改載入 ES5 版本,背景改播預錄的無縫循環影片。
 - **主機端場景工廠**:cron + Docker + agy,自動生圖 → 標地標 → 綁骨架 → 幾何 QA → AI 審查 → 上架;有停用開關與磁碟預算。
 
+## 快速開始:用 Claude Code 安裝(推薦)
+
+這個 repo 附了一個 Claude Code skill:`.claude/skills/lg-cleantv-setup/`。用 [Claude Code](https://claude.com/claude-code) 打開這個資料夾,說「幫我安裝貓咪首頁」,它會照下面的步驟一步一步帶你做、每步驗證,遇到問題也會查排錯表。
+
+**整體流程(8 步)**
+
+| # | 步驟 | 誰動手 | 完成的樣子 |
+|---|---|---|---|
+| 0 | 盤點:電視型號/IP、主機、HA、要放的實體 | 你回答問題 | 一張清單 |
+| 1 | 電視開 Developer Mode + Key Server | 你(遙控器) | 拿到電視 IP 與 Passphrase |
+| 2 | 電腦上跑模擬版 | Claude | 瀏覽器看到首頁 |
+| 3 | 主機部署 bridge(.env、config.json) | Claude;token 你自己貼 | `/api/health` 顯示 HA 已連線 |
+| 4 | 打包並安裝電視 App | Claude | 電視出現貓咪首頁 |
+| 5 | HA:webostv 配對 + 開機自動跳首頁 + 續期 | Claude;電視上你按「允許」 | 開機自動進首頁 |
+| 6 | (舊電視)legacy 版 + 循環影片 | Claude | webOS 4.x 也能用 |
+| 7 | 做貓場景 | 你出圖、Claude 處理 | 有自己的會動桌布 |
+| 8 | (選配)場景工廠 | Claude;agy 你自己登入 | 主機每週自動生新桌布 |
+
+不用 Claude Code 的話,展開下方「手動安裝步驟」照著做。
+
+**準備好再開始**:LG 電視(和主機同區網、建議有線)、一台 24 小時開著的 Linux 主機(有 Docker,可以就是跑 HA 那台)、Home Assistant、一台電腦(Python 3.10+、Node 18+、Chrome)。
+
 ## 架構
 
 ![架構圖](docs/images/architecture.png)
@@ -75,27 +97,10 @@
 `web/index.html` 自動判斷(`'noModule' in script` 且有 `WebGL2RenderingContext` → 新版,否則 legacy);可用 `?legacy=1` / `?legacy=0` 強制。
 其他 webOS 版本沒測過:webOS 22–25 應該走新版(Chromium 94–120),但 dpr、效能、ACG 行為可能不同。
 
-## 用 Claude Code 一步一步裝(推薦)
+## 手動安裝步驟
 
-這個 repo 附了一個 Claude Code skill:`.claude/skills/lg-cleantv-setup/`。用 [Claude Code](https://claude.com/claude-code) 打開這個資料夾,說「幫我安裝貓咪首頁」,它會照下面的步驟一步一步帶你做、每步驗證,遇到問題也會查排錯表。
-
-**整體流程(8 步)**
-
-| # | 步驟 | 誰動手 | 完成的樣子 |
-|---|---|---|---|
-| 0 | 盤點:電視型號/IP、主機、HA、要放的實體 | 你回答問題 | 一張清單 |
-| 1 | 電視開 Developer Mode + Key Server | 你(遙控器) | 拿到電視 IP 與 Passphrase |
-| 2 | 電腦上跑模擬版 | Claude | 瀏覽器看到首頁 |
-| 3 | 主機部署 bridge(.env、config.json) | Claude;token 你自己貼 | `/api/health` 顯示 HA 已連線 |
-| 4 | 打包並安裝電視 App | Claude | 電視出現貓咪首頁 |
-| 5 | HA:webostv 配對 + 開機自動跳首頁 + 續期 | Claude;電視上你按「允許」 | 開機自動進首頁 |
-| 6 | (舊電視)legacy 版 + 循環影片 | Claude | webOS 4.x 也能用 |
-| 7 | 做貓場景 | 你出圖、Claude 處理 | 有自己的會動桌布 |
-| 8 | (選配)場景工廠 | Claude;agy 你自己登入 | 主機每週自動生新桌布 |
-
-不用 Claude Code 也可以照下方「安裝步驟」手動做。
-
-## 安裝步驟
+<details>
+<summary>點開看完整的手動步驟(第 1–7 步,含所有指令)</summary>
 
 需要:LG 電視(和主機同一個區網,建議有線並在路由器固定 IP)、一台一直開著的 Linux 主機(有 Docker;可以就是跑 HA 的那台)、
 Home Assistant、一台電腦(Python 3.10+,Node 18+,Chrome;錄舊電視影片才需要 ffmpeg)。
@@ -192,7 +197,13 @@ Chrome 不在預設位置時設 `CHROME=<chrome 執行檔路徑>`(`dev/shot.mjs`
 - 生成的場景只有在設定頁「自動換桌布」開著時才會搶時段(`wallpaper_schedule.generated`),也可以在設定頁手選。
 - agy 免費生圖額度大約十幾張就會暫時用完(4–5 小時恢復),工廠會偵測並跳過。完整流程與門檻見 `factory/README.md`。
 
-## 疑難排解 / 踩過的坑(都在實機上遇過)
+</details>
+
+## 疑難排解 / 踩過的坑
+
+<details>
+<summary>點開看(都在實機上遇過;Claude Code skill 也會自動查這張表)</summary>
+
 - **SSH 進電視失敗**:電視的 dropbear 只接受舊的 `ssh-rsa` 簽章 → paramiko 要
   `disabled_algorithms={'pubkeys': ['rsa-sha2-512', 'rsa-sha2-256']}`(`lg/tvssh.py` 已處理)。電視沒有 sftp,用 `cat > file` 傳檔。
 - **ACG(webOS 26)**:appinfo 宣告 `requiredACG: ["application.launcher"]` 後,頁面裡 `PalmServiceBridge` 才能呼叫
@@ -209,6 +220,8 @@ Chrome 不在預設位置時設 `CHROME=<chrome 執行檔路徑>`(`dev/shot.mjs`
 - **Gemini 免費額度用完 / 沒有金鑰**:助手自動退回內建規則(能開關燈、調冷氣、查車庫門、播放 YouTube),`GEMINI_MODELS` 可列多個模型依序試。
 - **電池相機拍不到**:相機深睡;`wake_host` 設好後 bridge 會先敲醒它(最多 15 秒)。仍失敗會顯示「車庫相機在休眠…」,用 Tapo App 喚醒。
 - **舊電視循環影片每圈卡一下**:別用 `<video loop>`;`videocat.js` 用 MediaSource 無限接續(`?mse=0` 可關掉比較)。
+
+</details>
 
 ## 目錄
 | 路徑 | 內容 |
