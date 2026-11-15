@@ -1,0 +1,9 @@
+factory-data
+factory
+dev
+build
+node_modules
+docs
+.git
+**/__pycache__
+bridge/.env

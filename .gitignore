@@ -1,0 +1,43 @@
+# secrets / home-specific config (copy the *.example files)
+.env
+bridge/.env
+bridge/config.json
+ha/automations.yaml
+lg/.devkey/
+*.pem
+*_rsa
+*_rsa_*
+
+# build output
+build/
+node_modules/
+__pycache__/
+*.pyc
+*.ipk
+*.log
+
+# runtime data of the scene factory
+factory-data/
+factory/refs/*
+!factory/refs/README.md
+
+# media / generated assets (not in git: make them locally, see README)
+cats/**/assets/
+cats/video/
+cats/gen-live/*
+!cats/gen-live/index.js
+dev/ref/
+dev/shots/
+dev/poster/
+dev/states.json
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.mp4
+*.webm
+*.bin
+*.ktx
+*.ktx2
+*.hdr
+tapo_state*

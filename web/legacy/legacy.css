@@ -1,0 +1,69 @@
+/* Legacy overrides (loaded after app.css by the loader in index.html when the browser is old, e.g. webOS 4.4 =
+   Chrome 53). Chrome 53 has no flex `gap`, no `inset`, no grid, no color-mix, no aspect-ratio, no backdrop-filter.
+   Also cheaper for the old GPU: no big shadows / blur, opaque cards, no tile shine. Everything keyed off body.legacy. */
+
+/* ---- inset: 0 -> explicit edges */
+body.legacy #bg, body.legacy #stage, body.legacy .layer { top: 0; right: 0; bottom: 0; left: 0; }
+body.legacy .tile .claw { top: 10%; right: 14%; bottom: 10%; left: 14%; }
+
+/* ---- background: loop video / still (web/legacy/videocat.js) */
+body.legacy #stage { overflow: hidden; } /* no background: webOS 4 shows <video> on a hardware plane through a "hole" in the page */
+body.legacy #stage .bgvideo, body.legacy #stage .bgstill { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; object-fit: cover; }
+body.legacy #stage .bgstill { z-index: 1; }
+
+/* ---- cheap surfaces: opaque-ish cards, small shadows, no backdrop blur */
+body.legacy .card, body.legacy #quick, body.legacy .tile, body.legacy #toast {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  background: rgba(14,20,32,.74); border: 1px solid rgba(255,255,255,.18);
+  box-shadow: 0 4px 10px rgba(0,0,0,.35);
+}
+body.legacy .tile::after { display: none; }
+body.legacy .dialog, body.legacy .sheet, body.legacy .as-top { background: #1a2234; box-shadow: 0 8px 20px rgba(0,0,0,.5); }
+body.legacy .as-card { box-shadow: 0 4px 10px rgba(0,0,0,.4); }
+body.legacy .gsubs { box-shadow: 0 6px 14px rgba(0,0,0,.5); }
+/* Chrome 53 draws outlines square (ignores border-radius) -> ring made of box-shadow spreads (no blur = cheap) */
+body.legacy .f.focus { outline: none; box-shadow: 0 0 0 3px #fff, 0 0 0 10px rgba(255,255,255,.16); }
+body.legacy .tile.focus { background: rgba(70,82,110,.92); }
+body.legacy .light.on { box-shadow: none; }
+body.legacy .light.on .dot { box-shadow: none; }
+body.legacy .wx-ico svg { filter: none; }
+body.legacy #ui { text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+body.legacy .tile .appico { box-shadow: 0 0 0 1px rgba(255,255,255,.14); }
+body.legacy .tile .badge { background: var(--c); box-shadow: none; }
+body.legacy .tile { transition: none; } /* instant focus: a transition repaints the tile over the video every frame */
+body.legacy .as-card { transition: none; }
+body.legacy #assist { background: rgba(4,6,12,.62); }
+
+/* ---- flex gap -> margins (row containers: margin-left on every child but the first) */
+body.legacy #weather > * + * { margin-left: 12px; }
+body.legacy #quick > * + * { margin-left: 14px; }
+body.legacy .lights > * + *, body.legacy .garage-row > * + * { margin-left: 12px; }
+body.legacy .ac > * + * { margin-left: 8px; }
+body.legacy #dock > * + * { margin-left: 18px; }
+body.legacy .dbtns > * + * { margin-left: 22px; }
+body.legacy .srow > * + * { margin-left: 18px; }
+body.legacy .as-head > * + * { margin-left: 16px; }
+body.legacy .as-inputrow > * + * { margin-left: 18px; }
+body.legacy .as-cards > * + * { margin-left: 24px; }
+body.legacy .gsubs > * + * { margin-left: 8px; }
+body.legacy #alert > * + * { margin-left: 22px; }
+body.legacy .opt > * + * { margin-left: 10px; }
+body.legacy .keys span > * + * { margin-left: 8px; }
+/* column flex (tiles, thumbs): margin-top */
+body.legacy .tile > * + * { margin-top: 10px; }
+body.legacy .gsubs .sub > * + * { margin-top: 6px; }
+body.legacy .thumb > * + * { margin-top: 6px; }
+/* wrapping rows: margin on every child, pull the container back */
+body.legacy .opts, body.legacy .as-chips, body.legacy .keys { margin-right: -14px; }
+body.legacy .opts > *, body.legacy .as-chips > * { margin: 0 14px 14px 0; }
+body.legacy .opts > .about.inl { margin-bottom: 14px; }
+body.legacy .keys > * { margin: 0 22px 10px 0; }
+body.legacy .as-cards.ex { flex-wrap: wrap; }
+body.legacy .as-cards.ex > * { margin: 0 8px 16px; }
+body.legacy .as-chips { margin-bottom: -12px; }
+
+/* ---- settings thumbs: grid -> wrapping flex, 3 per row; aspect-ratio -> fixed height */
+body.legacy .thumbs { display: flex; flex-wrap: wrap; margin-right: -14px; }
+body.legacy .thumbs .thumb { width: 218px; margin: 0 14px 14px 0; box-sizing: border-box; }
+body.legacy .thumb img { height: 115px; }
+body.legacy .sheet::-webkit-scrollbar { display: none; }

@@ -1,0 +1,63 @@
+{
+ "_doc": "Scene recipes for factory.py. A run picks subject x style x theme x time-of-day (weights, season, history), builds the prompt from these pieces and the layout text. Every combination keeps the proven layout: subject behind a ledge filling the bottom ~25-28%, tail separated on the left, eyes open and large (or a sleeping pose), top-left third and right 20% calm for the UI.",
+ "max_scenes": 30,
+ "attempts": 3,
+ "avoid_recent": 8,
+ "subjects": {
+  "tabby": {"weight": 5, "kinds": ["cat"], "zh": "虎斑", "coat": "brown tabby cat with green eyes and a white chin",
+            "refs": {"film3d": [["pixar_tabby_a.jpg", "art style, framing and layout reference"], ["mycat_1.jpg", "photo of the real cat to depict: keep its exact coat pattern (brown mackerel tabby), green eyes, white chin and muzzle"], ["mycat_2.jpg", "second photo of the same real cat"]],
+                     "photo": [["real_tabby_a.jpg", "art style, framing and layout reference"], ["mycat_1.jpg", "photo of the real cat to depict: keep its exact coat pattern (brown mackerel tabby), green eyes, white chin and muzzle"], ["mycat_2.jpg", "second photo of the same real cat"]]}},
+  "black": {"weight": 2, "kinds": ["cat"], "zh": "黑貓", "coat": "black cat with amber eyes",
+            "refs": {"film3d": [["pixar_black_a.jpg", "art style, framing and layout reference; the same black cat with amber eyes"]],
+                     "photo": [["real_black_a.jpg", "art style, framing and layout reference; the same black cat with amber eyes"]]}},
+  "heroine": {"weight": 2, "kinds": ["person", "cat"], "zh": "女孩與虎斑", "styles": ["photo"], "coat": "brown tabby cat with green eyes",
+            "refs": {"photo": [["heroine_morning.jpg", "the woman to depict (an original character): keep HER face, hairstyle, hair colour and look exactly; also the layout reference (she sits behind a table, arms resting on it, the tabby cat lying next to her on the table)"], ["mycat_1.jpg", "photo of the real tabby cat to depict next to her: keep its coat pattern, green eyes and white chin"]]}}
+ },
+ "styles": {
+  "film3d": {"weight": 3, "zh": "動畫", "text": "Stylised 3D animated feature-film look: soft detailed fur, large expressive eyes, warm cinematic lighting, the same art style as the style reference."},
+  "photo": {"weight": 2, "zh": "寫實", "text": "Photorealistic, like a high-end 50mm photograph with natural light and a softly blurred background, the same look as the style reference."}
+ },
+ "tods": {
+  "morning": {"zh": "早晨", "text": "soft early-morning sunlight coming in from a window, fresh and bright but gentle"},
+  "day": {"zh": "午後", "text": "calm afternoon daylight, cosy and airy"},
+  "dusk": {"zh": "黃昏", "text": "warm golden dusk light and a few warm lamps, cosy"},
+  "night": {"zh": "夜晚", "text": "a quiet night room lit by one warm lamp, deep blue shadows"},
+  "rain": {"zh": "雨天", "text": "a rainy day, a large window behind with raindrops and soft grey light, one warm lamp"},
+  "sleep": {"zh": "深夜", "text": "late night, very dim warm lamp light, deep calm shadows"}
+ },
+ "themes": [
+  {"id": "yarn", "zh": "毛線球", "tods": ["morning", "day", "dusk"], "text": "a small ball of red yarn resting on the ledge next to the paw"},
+  {"id": "butterfly", "zh": "蝴蝶", "tods": ["morning", "day"], "months": [3, 4, 5, 6, 7], "text": "a small butterfly resting on the ledge in front of the cat, the cat looking at it with curiosity"},
+  {"id": "snow", "zh": "下雪", "tods": ["day", "dusk", "night"], "months": [12, 1, 2], "text": "a window behind with gentle snow falling outside, softly out of focus"},
+  {"id": "xmas", "zh": "聖誕燈", "tods": ["dusk", "night"], "months": [11, 12, 1], "text": "warm Christmas fairy lights softly blurred in the background and a small wrapped present on the ledge"},
+  {"id": "autumn", "zh": "秋葉", "tods": ["morning", "dusk"], "months": [9, 10, 11], "text": "a few orange autumn leaves drifting in the softly blurred background"},
+  {"id": "plants", "zh": "盆栽", "tods": ["morning", "day"], "text": "green potted plants softly blurred in the background"},
+  {"id": "moon", "zh": "月亮", "tods": ["night"], "text": "a large window behind showing a big soft moon over a calm night sky"},
+  {"id": "rainwin", "zh": "雨窗", "tods": ["rain"], "text": "raindrops running down the window behind, blurred city lights"},
+  {"id": "tea", "zh": "熱茶", "tods": ["morning", "day", "dusk"], "text": "a steaming cup of tea and a small book on the ledge"},
+  {"id": "sleepy", "zh": "睡覺", "tods": ["sleep"], "pose": "sleep", "only": ["tabby", "black"], "text": "a soft blanket"}
+ ],
+ "ledges": [
+  "a soft cream knitted blanket",
+  "a fluffy light-blue fleece blanket",
+  "a chunky grey knitted throw on the back of a sofa",
+  "a soft beige sherpa blanket"
+ ],
+ "layout": {
+  "cat": "{style} The {coat} peeks over {ledge} that fills the bottom 27% of the frame; the top edge of the blanket is a soft, nearly horizontal line at about 72% of the picture height. One front paw rests on the blanket edge. The head is in the horizontal middle of the picture (its centre about 50% from the left edge, the head no wider than 35% of the picture), big open eyes clearly visible, looking at the viewer. Its tail rises on the left side, about one quarter of the picture width from the left edge, curving upward, clearly separated from the body with background visible all around it. The whole head including both ears is well inside the frame with empty space above the ears. Background: {tod}; {theme}. Keep the top-left third of the picture and the right 20% dark, calm and low in detail (a clock and panels will be overlaid there).",
+  "sleep": "{style} The {coat} is curled up asleep on top of {ledge} that fills the bottom 30% of the frame, lying in the centre-right of the picture, eyes closed, head resting on its front paws, ears visible, its tail curled along the front of the body. The whole cat is inside the frame. Background: {tod}. Keep the top-left third of the picture and the right 20% dark, calm and low in detail.",
+  "person": "{style} The same young woman as in the reference sits behind a wooden table that fills the bottom 15% of the frame, her forearms resting on the table, smiling softly at the viewer with open eyes; wireless headphones around her neck; her face is about 40% from the left edge of the picture. The {coat} from the reference lies on the table about 65-75% from the left edge, beside her, with its head up, eyes open, looking at the viewer; its tail lies on the table. Background: a cosy room, {tod}; {theme}. Keep the top-left third of the picture in soft shadow (clearly darker than the rest, white clock text will be overlaid there) and the right 15% calm and low in detail.",
+  "tail": " No text, no watermark, no border, one single picture (not a collage)."
+ },
+ "ledge_range": {"cat": [0.6, 0.84], "sleep": [0.6, 0.86], "person": [0.72, 0.93]},
+ "motion": {
+  "cat": {"cat": {"eyeShift": [0.16, 0.1], "eyeTau": 0.035, "headHz": 0.8, "headZeta": 0.8, "roll": 0.004, "tilt": 0.01, "bob": 0.7, "yawShift": 1.4,
+          "breath": 0.006, "breathHz": 0.45, "earTwitch": 0.13, "earGaze": 0.03, "tailAmp": 0.025, "tailHz": 0.22, "tailLag": 2.0, "tailDrift": 0.015, "flick": 0.1}},
+  "sleep": {"cat": {"eyeShift": [0, 0], "headHz": 0.4, "roll": 0.0015, "tilt": 0, "bob": 0.25, "yawShift": 0, "breath": 0.011, "breathHz": 0.22, "breathY": 1.0, "headRide": 0.35,
+            "earTwitch": 0.09, "earGaze": 0, "earEvery": [7, 18], "tailAmp": 0.008, "tailHz": 0.08, "tailLag": 1.6, "tailDrift": 0.012, "flick": 0.07, "flickEvery": [9, 20]}},
+  "person": {"person": {"eyeShift": [0.15, 0.0], "breath": 1.5, "breathHz": 0.23, "hair": 2.0, "hairY": 0.5, "hairHz": 0.15, "roll": 0.003, "bob": 0.45, "yawShift": 0.8, "tilt": 0.005},
+             "cat": {"eyeShift": [0.2, 0.1], "earTwitch": 0.12, "earGaze": 0.025, "breath": 0.006, "breathHz": 0.42, "yawShift": 1.2, "bob": 0.6, "roll": 0.004, "tilt": 0.008,
+                     "tailAmp": 0.012, "tailHz": 0.18, "tailDrift": 0.008, "flick": 0.06, "flickEvery": [7, 16]}}
+ },
+ "grade": {"morning": 0.35, "day": 0.35, "dusk": 0.3, "night": 0.25, "rain": 0.3, "sleep": 0.25}
+}

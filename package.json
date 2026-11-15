@@ -1,0 +1,12 @@
+{
+  "name": "lg-cleantv",
+  "private": true,
+  "description": "Dev tools for the LG TV cat home screen (legacy bundle build; headless screenshots use a local Chrome)",
+  "scripts": {
+    "build:legacy": "node dev/build_legacy.mjs",
+    "check:legacy": "node dev/build_legacy.mjs --check"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.2"
+  }
+}

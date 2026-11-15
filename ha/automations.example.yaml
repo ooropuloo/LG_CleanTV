@@ -1,0 +1,68 @@
+# 範例:把這兩個自動化貼進 HA 的 automations.yaml(或 UI → 自動化 → 以 YAML 編輯),再依你家修改:
+#   media_player.lg_webos_tv            → 你的電視(webostv 整合建立的 media_player)
+#   input_boolean.tv_home_autolaunch    → 總開關,先建立(設定 → 裝置與服務 → 小幫手 → 切換),預設關,測好再打開
+#   com.lgcleantv.home                  → lg/app/appinfo.json 的 id(若你改過)
+#   '貓咪首頁'                           → appinfo.json 的 title(webostv 的 source 名稱)
+
+- id: tvhome_on_boot
+  alias: 電視開機跳貓咪首頁
+  description: 電視開機後(不是被 HDMI 裝置喚醒時)自動打開貓咪首頁。總開關 input_boolean.tv_home_autolaunch
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: media_player.lg_webos_tv
+      from: ["off", "unavailable"]
+      to: "on"
+  conditions:
+    - condition: state
+      entity_id: input_boolean.tv_home_autolaunch
+      state: "on"
+  actions:
+    - delay: "00:00:04"
+    - condition: template
+      value_template: >-
+        {% set s = state_attr('media_player.lg_webos_tv', 'source') or '' %}
+        {{ not (s.startswith('HDMI') or s in ['Apple TV', '貓咪首頁']) }}
+    - action: webostv.command
+      data:
+        entity_id: media_player.lg_webos_tv
+        command: system.launcher/launch
+        payload:
+          id: com.lgcleantv.home
+
+- id: tvhome_devmode_extend
+  alias: 電視開發者模式自動續期
+  description: >-
+    LG Developer Mode 一次 1000 小時,到期會刪掉貓咪首頁。電視開著且停在貓咪首頁時,最多每 6 天按一次 Extend,
+    約 8 秒後切回首頁。總開關同上。
+  mode: single
+  triggers:
+    - trigger: state
+      entity_id: media_player.lg_webos_tv
+      attribute: source
+      to: 貓咪首頁
+      for: "00:00:20"
+  conditions:
+    - condition: state
+      entity_id: input_boolean.tv_home_autolaunch
+      state: "on"
+    - condition: template
+      value_template: >-
+        {% set lt = this.attributes.last_triggered %}
+        {{ lt is none or (now() - lt).total_seconds() > 6 * 86400 }}
+  actions:
+    - action: webostv.command
+      data:
+        entity_id: media_player.lg_webos_tv
+        command: system.launcher/launch
+        payload:
+          id: com.palmdts.devmode
+          params:
+            extend: true
+    - delay: "00:00:08"
+    - action: webostv.command
+      data:
+        entity_id: media_player.lg_webos_tv
+        command: system.launcher/launch
+        payload:
+          id: com.lgcleantv.home

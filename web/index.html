@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>貓咪首頁</title>
+<link rel="stylesheet" href="app.css">
+<script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+</head>
+<body>
+<div id="bg"></div>
+<div id="stage"></div>
+<div id="ui">
+  <div id="scrim-tl"></div><div id="scrim-bottom"></div>
+
+  <section id="clockzone">
+    <div id="clock">--:--</div>
+    <div id="date">&nbsp;</div>
+    <div id="weather"><span class="wx-ico"></span><span class="wx-txt">—</span></div>
+  </section>
+
+  <section id="status" class="card" aria-label="家裡狀態">
+    <div class="row"><span class="k">室內</span><span class="v" id="st-indoor">—</span></div>
+    <div class="row"><span class="k">一樓</span><span class="v" id="st-person">—</span></div>
+    <div class="row"><span class="k">掃地機</span><span class="v" id="st-vacuum">—</span></div>
+    <div class="row"><span class="k">車庫門</span><span class="v" id="st-garage">—</span></div>
+    <div class="row"><span class="k">煙霧</span><span class="v" id="st-smoke">—</span></div>
+  </section>
+
+  <nav id="quick">
+    <button class="f qbtn" id="q-assist" data-act="assist" title="AI 助手"></button>
+    <button class="f qbtn" id="q-snap" data-act="snapshot" title="車庫畫面"></button>
+    <button class="f qbtn" id="q-reload" data-act="reload" title="重新整理"></button>
+    <button class="f qbtn" id="q-settings" data-act="settings" title="設定"></button>
+    <span id="conn" class="conn" title="連線狀態"></span>
+  </nav>
+
+  <section id="panel" class="card" aria-label="家裡控制">
+    <div class="ptitle">家裡控制</div>
+    <div id="lights" class="lights"></div>
+    <div class="garage-row">
+      <button class="f ctl wide" id="garage-btn" data-act="garage"><span class="name">車庫鐵門<small id="garage-hint"></small></span><span class="val" id="garage-val">—</span></button>
+      <button class="f ctl icon" id="garage-snap" data-act="snapshot" title="看車庫畫面"></button>
+    </div>
+    <button class="f ctl wide livecam" id="cam-live" data-act="live-cam" hidden><span class="name">一樓畫面<small>即時影像 · 約每 1.5 秒更新</small></span><span class="lc-ico"></span></button>
+    <div id="acs"></div>
+  </section>
+
+  <div id="alert" hidden><b>煙霧警報</b><span id="alert-txt">2F 偵測到煙霧!</span></div>
+  <div id="dock"></div>
+  <div id="toast" hidden></div>
+
+  <div id="modal" class="layer" hidden>
+    <div class="dialog">
+      <div class="dtitle" id="m-title"></div>
+      <div class="dbody" id="m-body"></div>
+      <div class="dbtns" id="m-btns"></div>
+    </div>
+  </div>
+
+  <div id="assist" class="layer" hidden>
+    <div class="as-top">
+      <div class="as-head">
+        <span class="as-badge" id="as-badge"></span><span class="as-title">AI 助手</span>
+        <span class="as-hint" id="as-hint">按遙控器的麥克風鍵說話,或用鍵盤輸入,按 OK 送出</span>
+      </div>
+      <div class="as-inputrow">
+        <input id="as-input" class="f" type="text" maxlength="200" autocomplete="off" spellcheck="false" enterkeyhint="send"
+               placeholder="例如:客廳冷氣調到 26 度、播放貓咪影片">
+        <button class="f btn primary" id="as-send" data-act="as-send">送出</button>
+      </div>
+      <div class="as-conv" id="as-conv" hidden>
+        <div class="as-you" id="as-you"></div>
+        <div class="as-reply" id="as-reply"></div>
+        <div class="as-chips" id="as-chips"></div>
+      </div>
+    </div>
+    <div class="as-bottom">
+      <div class="as-label" id="as-label">試試看</div>
+      <div class="as-cards" id="as-cards"></div>
+    </div>
+  </div>
+
+  <div id="sheet" class="layer" hidden>
+    <div class="sheet">
+      <div class="dtitle">設定</div>
+      <div class="sgroup"><div class="slabel">背景場景(按 OK 換)</div><div id="s-scenes" class="thumbs"></div></div>
+      <div class="sgroup"><div class="slabel">固定這個場景</div><div id="s-pin" class="opts"></div></div>
+      <div class="sgroup"><div class="slabel">自動換桌布</div><div id="s-auto" class="opts"></div><div id="s-sched" class="sched"></div></div>
+      <div class="sgroup"><div class="slabel">貓撲圖示</div><div id="s-swat" class="opts"></div></div>
+      <div class="sgroup"><div class="slabel">遙控器色鍵</div><div class="keys"><span><i class="kr"></i>上一個場景</span><span><i class="kg"></i>一直固定 / 取消</span><span><i class="ky"></i>回到自動</span><span><i class="kb"></i>下一個場景</span></div></div>
+      <div class="sgroup"><div class="slabel">自動生成場景</div><div id="s-factory" class="opts"></div></div>
+      <div class="sgroup"><div class="slabel">關於</div><div id="s-about" class="about"></div></div>
+      <div class="dbtns"><button class="f btn" data-act="sheet-close">關閉</button></div>
+    </div>
+  </div>
+</div>
+<script>
+// Loader (ES5 on purpose, runs everywhere): modern browsers (ES modules + WebGL2) get the module app with the WebGL
+// cat; old ones (webOS 4.x = Chrome 53) get web/legacy/app.legacy.js (built by dev/build_legacy.mjs) + legacy.css
+// with a loop-video background. ?legacy=1 forces legacy, ?legacy=0 forces modern.
+(function () {
+  var q = location.search, s = document.createElement('script');
+  var modern = ('noModule' in s) && typeof WebGL2RenderingContext !== 'undefined';
+  var legacy = /[?&]legacy=1/.test(q) || (!modern && !/[?&]legacy=0/.test(q));
+  window.__legacy = legacy;
+  if (legacy) {
+    var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'legacy/legacy.css'; document.head.appendChild(l);
+    s.src = 'legacy/app.legacy.js';
+  } else { s.type = 'module'; s.src = 'app.js'; }
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>

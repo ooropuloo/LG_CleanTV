@@ -1,0 +1,96 @@
+{
+  "port": 8790,
+  "tv_ip": "192.168.1.50",
+  "allow_call_from": ["127.0.0.1", "::1", "192.168.1.51"],
+  "ha_browser_url": "http://192.168.1.10:8123/lovelace/0",
+  "styles": ["pixar-live", "real-live", "heroine-live", "tabby-scenes-live"],
+  "default_style": "pixar-live",
+  "default_coat": "tabby",
+  "snapshot_min_interval_s": 10,
+
+  "scenes": [
+    { "id": "pixar-tabby", "name": "皮克斯風 · 虎斑", "style": "pixar-live", "coat": "tabby" },
+    { "id": "pixar-black", "name": "皮克斯風 · 黑貓", "style": "pixar-live", "coat": "black" },
+    { "id": "real-tabby",  "name": "寫實 · 虎斑",     "style": "real-live",  "coat": "tabby" },
+    { "id": "real-black",  "name": "寫實 · 黑貓",     "style": "real-live",  "coat": "black" },
+    { "id": "tabby-play",  "name": "虎斑 · 玩毛線球", "style": "tabby-scenes-live", "coat": "play" },
+    { "id": "tabby-sleep", "name": "虎斑 · 睡覺",     "style": "tabby-scenes-live", "coat": "sleep" },
+    { "id": "heroine-morning", "name": "耳機女孩 · 早晨", "style": "heroine-live", "coat": "morning" },
+    { "id": "heroine-evening", "name": "耳機女孩 · 雨夜", "style": "heroine-live", "coat": "evening" }
+  ],
+  "wallpaper_schedule": {
+    "mode": "schedule",
+    "entries": [
+      { "from": "06:30", "scene": "tabby-play" },
+      { "from": "10:00", "scene": "pixar-tabby" },
+      { "from": "18:00", "scene": "real-tabby" },
+      { "from": "23:00", "scene": "tabby-sleep" }
+    ],
+    "check_minutes": 15,
+    "generated": { "chance": 0.35, "new_chance": 0.8, "new_days": 2, "recent_days": 30 },
+    "random": [
+      { "scene": "heroine-morning", "between": ["07:00", "17:00"], "chance": 0.1, "min_minutes": 20, "max_minutes": 45, "max_per_day": 2, "gap_minutes": 60 },
+      { "scene": "heroine-evening", "between": ["18:00", "23:30"], "chance": 0.15, "min_minutes": 20, "max_minutes": 45, "max_per_day": 2, "gap_minutes": 60 }
+    ]
+  },
+
+  "assistant": {
+    "enabled": true,
+    "max_text": 200,
+    "per_minute": 8,
+    "deny_entities": ["cover.garage_door"]
+  },
+
+  "ui": {
+    "weather": "weather.forecast_home",
+    "indoor_temp": "sensor.living_room_temperature",
+    "indoor_hum": "sensor.living_room_humidity",
+    "smoke": "binary_sensor.smoke_detector_smoke",
+    "person": "binary_sensor.living_room_person",
+    "vacuum": "vacuum.robot_vacuum",
+    "garage": "cover.garage_door",
+    "garage_camera": "garage",
+    "live_camera": "c400",
+    "lights": ["light.living_room_main", "light.bar_lamp"],
+    "acs": ["climate.living_room_ac", "climate.bedroom_ac", "climate.study_ac"]
+  },
+
+  "entities": {
+    "weather.forecast_home":               { "name": "天氣" },
+    "sensor.living_room_temperature":    { "name": "室內溫度" },
+    "sensor.living_room_humidity":       { "name": "室內濕度" },
+    "binary_sensor.smoke_detector_smoke":{ "name": "煙霧偵測" },
+    "binary_sensor.living_room_person":          { "name": "1F 有人" },
+    "vacuum.robot_vacuum":                   { "name": "掃地機" },
+    "camera.garage":                    { "name": "車庫攝影機" },
+    "camera.living_room":                        { "name": "一樓攝影機" },
+    "cover.garage_door":                  { "name": "車庫鐵門", "services": ["cover.open_cover", "cover.close_cover"], "confirm": true },
+    "light.living_room_main":               { "name": "主燈",   "services": ["light.toggle"] },
+    "light.bar_lamp":       { "name": "吧台燈", "services": ["light.toggle"] },
+    "climate.living_room_ac":               { "name": "客廳冷氣",  "services": ["climate.turn_on", "climate.turn_off", "climate.set_temperature"] },
+    "climate.bedroom_ac":                { "name": "主臥冷氣",  "services": ["climate.turn_on", "climate.turn_off", "climate.set_temperature"] },
+    "climate.study_ac":          { "name": "工作室冷氣", "services": ["climate.turn_on", "climate.turn_off", "climate.set_temperature"] }
+  },
+
+  "cameras": {
+    "garage": { "entity": "camera.garage", "wake_host": "192.168.1.60:8800", "name": "車庫畫面", "min_interval_s": 10, "battery": true },
+    "c400":   { "entity": "camera.living_room",     "name": "一樓畫面", "min_interval_s": 1, "live": true, "refresh_s": 1.5 }
+  },
+
+  "apps": [
+    { "key": "assist",   "title": "AI 助手",        "action": "assist",           "icon": "mic",    "color": "#7c4dff" },
+    { "key": "youtube",  "title": "YouTube",        "id": "youtube.leanback.v4", "icon": "play",   "color": "#e1251b" },
+    { "key": "ha",       "title": "HA 平面圖", "id": "com.webos.app.browser", "params": { "target": "$ha_browser_url" }, "icon": "house", "color": "#1d8ad6" },
+    { "key": "livetv",   "title": "電視",           "id": "com.webos.app.livetv", "icon": "tv",     "color": "#3d4a63" },
+    { "key": "hdmi",     "title": "HDMI",           "icon": "hdmi",   "color": "#2f3a4f", "group": [
+      { "key": "hdmi1", "title": "HDMI 1", "label": "1", "id": "com.webos.app.hdmi1" },
+      { "key": "hdmi2", "title": "HDMI 2", "label": "2", "id": "com.webos.app.hdmi2" },
+      { "key": "hdmi3", "title": "HDMI 3", "label": "3", "id": "com.webos.app.hdmi3" },
+      { "key": "hdmi4", "title": "HDMI 4", "label": "4", "id": "com.webos.app.hdmi4" } ] },
+    { "key": "fireplace", "title": "壁爐", "action": "ytsearch_play", "query": "fireplace 4K crackling fire 3 hours", "min_minutes": 60, "icon": "play", "color": "#3a1c10" },
+    { "key": "netflix",  "title": "Netflix",        "id": "netflix",              "icon": "film",   "color": "#141414" },
+    { "key": "prime",    "title": "Prime Video",    "id": "amazon",               "icon": "film",   "color": "#1a98ff" },
+    { "key": "lghome",   "title": "LG 首頁",        "id": "com.webos.app.home",   "icon": "grid",   "color": "#a50034" },
+    { "key": "settings", "title": "設定",           "action": "settings",         "icon": "gear",   "color": "#56607a" }
+  ]
+}

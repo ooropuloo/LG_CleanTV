@@ -1,0 +1,36 @@
+<!doctype html><meta charset="utf-8"><title>gpu probe</title>
+<body style="margin:0;background:#111;color:#9fd;font:14px monospace"><pre id="o"></pre>
+<script type="importmap">{"imports":{"three":"../../../vendor/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+window.__cat = { ready: false };
+try {
+  const out = {};
+  for (const [W, H, aa] of [[1280, 720, false], [1280, 720, true], [1920, 1080, true]]) {
+    const renderer = new THREE.WebGLRenderer({ antialias: aa, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(1); renderer.setSize(W, H, false);
+    const gl = renderer.getContext();
+    const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    out.gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'n/a';
+    out.maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE); out.samples = gl.getParameter(gl.SAMPLES);
+    out.aniso = renderer.capabilities.getMaxAnisotropy();
+    // fill-rate test: N full-screen blended quads with a moderately heavy shader + 2 texture fetches
+    const scene = new THREE.Scene(), cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const data = new Uint8Array(256 * 256 * 4); for (let i = 0; i < data.length; i++) data[i] = (Math.sin(i * 12.9898) * 43758.5453 % 1) * 255;
+    const tex = new THREE.DataTexture(data, 256, 256); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.generateMipmaps = true; tex.minFilter = THREE.LinearMipmapLinearFilter; tex.magFilter = THREE.LinearFilter; tex.needsUpdate = true;
+    const mat = new THREE.ShaderMaterial({ transparent: true, depthTest: false, depthWrite: false, uniforms: { t: { value: tex } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }',
+      fragmentShader: 'uniform sampler2D t; varying vec2 vUv; void main(){ vec4 a = texture2D(t, vUv*7.); vec4 b = texture2D(t, vUv*3.1+a.xy*.01); vec3 n = normalize(vec3(a.xy-.5, 1.)); vec3 T = normalize(vec3(b.xy-.5,.3)); float s = pow(sqrt(max(0.,1.-dot(T,n)*dot(T,n))), 40.); float d = max(dot(n, vec3(.3,.5,.8)), 0.); gl_FragColor = vec4(vec3(d*.2+s)*b.z, .1*a.w+.02); }' });
+    const quads = [];
+    for (let i = 0; i < 12; i++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); m.frustumCulled = false; m.renderOrder = i; scene.add(m); quads.push(m); }
+    const px = new Uint8Array(4);
+    const run = (n, k) => { quads.forEach((m, i) => m.visible = i < k); for (let i = 0; i < 5; i++) { renderer.render(scene, cam); } gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); const t0 = performance.now(); for (let i = 0; i < n; i++) { renderer.render(scene, cam); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); } return +((performance.now() - t0) / n).toFixed(3); };
+    const key = `${W}x${H}${aa ? '_aa' : ''}`;
+    out[key] = { q0: run(60, 0), q1: run(60, 1), q4: run(60, 4), q12: run(60, 12) };
+    out[key].msPerFullscreenLayer = +((out[key].q12 - out[key].q1) / 11).toFixed(3);
+    renderer.dispose(); renderer.forceContextLoss();
+  }
+  document.getElementById('o').textContent = JSON.stringify(out, null, 1);
+  Object.assign(window.__cat, out, { ready: true });
+} catch (e) { window.__cat.err = String(e && e.stack || e); }
+</script>

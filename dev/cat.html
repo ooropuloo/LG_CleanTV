@@ -1,0 +1,86 @@
+<!doctype html><meta charset="utf-8"><title>tv-home cat preview</title>
+<style>
+html,body{margin:0;height:100%;background:#05070b;overflow:hidden;font-family:"Segoe UI","Noto Sans TC",system-ui,sans-serif}
+#stage{position:fixed;inset:0}
+#stage canvas{width:100%;height:100%;display:block}
+#sheet{position:fixed;inset:0;width:100%;height:100%;display:none;z-index:4;background:#000}
+#info{position:fixed;right:8px;bottom:4px;font:12px monospace;color:#9fd;white-space:pre;text-shadow:0 0 3px #000,0 0 3px #000;z-index:6}
+#ui{position:fixed;inset:0;z-index:3;display:none;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.45)}
+#ui .clock{position:absolute;left:1.4vw;top:6.5vh;font-size:9.6vh;font-weight:700;line-height:1}
+#ui .wx{position:absolute;left:1.6vw;top:22.5vh;font-size:3.3vh;font-weight:600}
+#ui .date{position:absolute;left:1.3vw;top:29.8vh;font-size:2.1vh}
+#ui .card{position:absolute;left:1.3vw;top:34.3vh;width:16.6vw;height:19.6vh;border-radius:1.6vh;background:rgba(255,255,255,.22)}
+#ui .panel{position:absolute;right:.2vw;top:21vh;width:20.3vw;height:34.2vh;border-radius:1.8vh;background:rgba(20,40,80,.45);border:1px solid rgba(255,255,255,.25)}
+#ui .quick{position:absolute;right:1.3vw;top:2.8vh;width:18.3vw;height:7.1vh;border-radius:4vh;background:rgba(20,22,28,.78)}
+#ui .dock{position:absolute;left:4.6vw;right:0;top:87vh;height:11.7vh;display:flex;gap:1.5vw}
+#ui .dock i{flex:0 0 11.6vw;border-radius:1vh;background:rgba(255,255,255,.9);box-shadow:0 .6vh 2vh rgba(0,0,0,.35)}
+#ui .dock i:nth-child(2n){background:rgba(40,70,200,.9)}
+#ui .dock i.f{outline:.5vh solid #fff;transform:scale(1.08)}
+</style>
+<div id="stage"></div><canvas id="sheet"></canvas>
+<div id="ui"><div class="clock">11:13</div><div class="wx">☁ 28° · 多雲 · 陽台 33°</div><div class="date">星期六,11 月 7 日</div><div class="card"></div><div class="quick"></div><div class="panel"></div>
+<div class="dock"><i></i><i></i><i class="f"></i><i></i><i></i><i></i><i></i><i></i></div></div>
+<div id="info"></div>
+<script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+<script type="module">
+// 貓場景預覽 / 截圖用 harness。介面契約見 ../cats/README.md
+//   style=pixar|real|pixar-live|real-live|_example   q=tv|desktop   coat=black|tabby(花色,預設 black)   ui=1 疊上假的首頁 UI 檢查構圖
+//   t=秒      先用固定步長 1/30 模擬到 t 再畫一張後凍結(截圖可重現);不給 t 就即時播放
+//   sheet=N&t0=0&t1=4   畫 N 張連續時間的縮圖拼在一起,用來看動作
+//   zoom=x,y,w,h        只畫畫面的一塊(0~1,左上原點),看眼睛/毛的特寫
+//   gaze=x,y  mood=awake|sleepy|alert  hour=0~24  poke=blink@2;earTwitch@3.5;swat:0.1,0.92@5(帶螢幕座標)   bench=N 量每格毫秒
+import * as THREE from 'three';
+const q = new URLSearchParams(location.search), num = (k, d) => q.has(k) ? +q.get(k) : d;
+const info = document.getElementById('info'), stage = document.getElementById('stage');
+const style = q.get('style') || 'pixar', quality = q.get('q') === 'tv' ? 'tv' : 'desktop';
+const TM = { None: THREE.NoToneMapping, Linear: THREE.LinearToneMapping, Reinhard: THREE.ReinhardToneMapping, Cineon: THREE.CineonToneMapping, ACESFilmic: THREE.ACESFilmicToneMapping, AgX: THREE.AgXToneMapping, Neutral: THREE.NeutralToneMapping };
+const SH = { Basic: THREE.BasicShadowMap, PCF: THREE.PCFShadowMap, PCFSoft: THREE.PCFSoftShadowMap, VSM: THREE.VSMShadowMap };
+window.__cat = { ready: false, style, quality };
+try {
+  const t0 = performance.now();
+  const mod = await import(`../cats/${style}/index.js?v=${Date.now()}`);
+  const rh = typeof mod.meta?.renderer === 'function' ? mod.meta.renderer(quality) : (mod.meta?.renderer || {});
+  const W = quality === 'tv' ? 1280 : 1920, H = quality === 'tv' ? 720 : 1080;
+  const renderer = new THREE.WebGLRenderer({ antialias: rh.antialias ?? quality !== 'tv', powerPreference: 'high-performance', alpha: false });
+  renderer.setPixelRatio(1); renderer.setSize(W, H, false); stage.append(renderer.domElement);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = TM[rh.toneMapping] ?? THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = rh.exposure ?? 1;
+  renderer.shadowMap.enabled = !!rh.shadows; renderer.shadowMap.type = SH[rh.shadowType] ?? THREE.PCFSoftShadowMap;
+  const coat = q.get('coat') || 'black';
+  const h = await mod.createCatScene({ renderer, quality, aspect: W / H, seed: num('seed', 1), coat });
+  const initMs = Math.round(performance.now() - t0);
+  if (q.has('mood')) h.setMood?.(q.get('mood'));
+  if (q.has('hour')) h.setHour?.(num('hour', 12));
+  if (q.has('gaze')) { const [x, y] = q.get('gaze').split(',').map(Number); h.setGaze?.(x, y); }
+  const pokes = (q.get('poke') || '').split(';').filter(Boolean).map(s => { const [k0, at] = s.split('@'); const [k, xy] = k0.split(':'); return { k, args: xy ? xy.split(',').map(Number) : [], at: +at || 0, done: false }; });   // poke=swat:0.1,0.92@1.5
+  if (q.has('zoom')) { const [x, y, w, hh] = q.get('zoom').split(',').map(Number); h.camera.setViewOffset(W, H, x * W, y * H, w * W, hh * H); }
+  if (q.get('ui') === '1') document.getElementById('ui').style.display = 'block';
+  const STEP = 1 / 30; let simT = 0;
+  const step = (dt) => { simT += dt; for (const p of pokes) if (!p.done && simT >= p.at) { p.done = true; h.poke?.(p.k, ...p.args); } h.update(dt, simT); };
+  const simTo = (t) => { while (simT + STEP * .5 < t) step(STEP); };
+  const stat = () => { const r = renderer.info; return { calls: r.render.calls, triangles: r.render.triangles, geometries: r.memory.geometries, textures: r.memory.textures, programs: r.programs?.length }; };
+  const show = (extra = '') => { const s = stat(); info.textContent = q.get('info') === '0' ? '' : `${style} · ${coat} · ${quality} ${W}×${H} · calls ${s.calls} · tris ${s.triangles} · tex ${s.textures} · init ${initMs} ms${extra}`; };
+  Object.assign(window.__cat, { coat, size: [W, H], initMs, meta: mod.meta ? { id: mod.meta.id, name: mod.meta.name } : null, api: ['setGaze', 'setMood', 'setHour', 'poke', 'resize', 'dispose'].filter(k => typeof h[k] === 'function') });
+  if (q.has('sheet')) {
+    const n = Math.max(2, num('sheet', 8)), a = num('t0', 0), b = num('t1', 4), cols = n <= 4 ? n : Math.ceil(n / 2), rows = Math.ceil(n / cols);
+    const cv = document.getElementById('sheet'), cx = cv.getContext('2d'); cv.width = 1920; cv.height = 1080; cv.style.display = 'block';
+    const tw = 1920 / cols, th = tw * 9 / 16, oy = (1080 - th * rows) / 2; cx.fillStyle = '#000'; cx.fillRect(0, 0, 1920, 1080);
+    for (let i = 0; i < n; i++) { const t = a + (b - a) * i / (n - 1); simTo(t); renderer.render(h.scene, h.camera); cx.drawImage(renderer.domElement, (i % cols) * tw, oy + Math.floor(i / cols) * th, tw, th); cx.fillStyle = '#9fd'; cx.font = '20px monospace'; cx.fillText('t=' + t.toFixed(2), (i % cols) * tw + 8, oy + Math.floor(i / cols) * th + 24); }
+    show(); Object.assign(window.__cat, { info: stat(), ready: true });
+  } else if (q.has('bench')) {
+    const n = num('bench', 120), gl = renderer.getContext(), px = new Uint8Array(4);
+    for (let i = 0; i < 10; i++) { step(STEP); renderer.render(h.scene, h.camera); } gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    const b0 = performance.now(); let js = 0;
+    for (let i = 0; i < n; i++) { const j0 = performance.now(); step(STEP); js += performance.now() - j0; renderer.render(h.scene, h.camera); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); }
+    const ms = (performance.now() - b0) / n; show(` · bench ${ms.toFixed(2)} ms/frame (js ${(js / n).toFixed(2)})`);
+    Object.assign(window.__cat, { info: stat(), benchMs: +ms.toFixed(3), jsMs: +(js / n).toFixed(3), ready: true });
+  } else if (q.has('t')) {
+    simTo(num('t', 0)); renderer.render(h.scene, h.camera); show(` · t=${simT.toFixed(2)}`); Object.assign(window.__cat, { info: stat(), t: +simT.toFixed(3), ready: true });
+  } else {
+    let last = performance.now(), acc = 0, frames = 0, fps = 0;
+    renderer.setAnimationLoop(() => { const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now; step(dt); renderer.render(h.scene, h.camera); acc += dt; frames++; if (acc >= 1) { fps = frames / acc; acc = 0; frames = 0; show(` · ${fps.toFixed(0)} fps`); window.__cat.fps = +fps.toFixed(1); } });
+    renderer.render(h.scene, h.camera); show(); Object.assign(window.__cat, { info: stat(), ready: true });
+    window.__handle = h;
+  }
+} catch (e) { window.__cat.err = String(e && e.stack || e); info.textContent = window.__cat.err; info.style.color = '#f88'; }
+</script>

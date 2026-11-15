@@ -1,0 +1,66 @@
+<!doctype html><meta charset="utf-8"><title>tv-home loop recorder</title>
+<style>html,body{margin:0;height:100%;background:#000;overflow:hidden}#out{position:fixed;left:0;top:0;width:100%;height:100%;display:block}#gl{display:none}</style>
+<canvas id="out"></canvas><div id="gl"></div>
+<script type="importmap">{"imports":{"three":"../vendor/three.module.js"}}</script>
+<script type="module">
+// Harness for dev/record_loop.mjs: renders a living-image scene with a fixed 1/fps step and composes a seamless loop.
+//   ?style=pixar-live&coat=tabby&seed=1&hour=14&mood=awake&w=1920&h=1080&fps=30
+// window.__rec.plan({t0, F, Lmin, Lmax}) -> {L, cost}: picks the loop length whose last F frames look most like the
+//   first F frames (tiny grey signatures), so the closing crossfade has the least ghosting.
+// window.__rec.begin({t0, F, L}) then __rec.next() per output frame (true while frames remain); #out shows the frame:
+//   out = A[F..L-1], then A[L+j] crossfaded into A[j] (smoothstep, j = 0..F-1)  ->  wraps seamlessly to A[F].
+import * as THREE from 'three';
+const q = new URLSearchParams(location.search), num = (k, d) => (q.has(k) ? +q.get(k) : d);
+const W = num('w', 1920), H = num('h', 1080), FPS = num('fps', 30), STEP = 1 / FPS;
+const R = (window.__rec = { ready: false });
+try {
+  const style = q.get('style'), coat = q.get('coat') || 'black';
+  const mod = await import(`../cats/${style}/index.js`);
+  const rh = typeof (mod.meta && mod.meta.renderer) === 'function' ? mod.meta.renderer('desktop') : ((mod.meta && mod.meta.renderer) || {});
+  const renderer = new THREE.WebGLRenderer({ antialias: rh.antialias != null ? rh.antialias : true, alpha: false, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(1); renderer.setSize(W, H, false); document.getElementById('gl').append(renderer.domElement);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = rh.toneMapping === 'None' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = rh.exposure != null ? rh.exposure : 1;
+  const h = await mod.createCatScene({ renderer, quality: 'desktop', aspect: W / H, seed: num('seed', 1), coat, params: {} });
+  if (q.has('hour')) h.setHour && h.setHour(num('hour', 12));
+  if (q.has('mood')) h.setMood && h.setMood(q.get('mood'));
+  h.setGaze && h.setGaze(null);
+  const glc = renderer.domElement;
+  const out = document.getElementById('out'); out.width = W; out.height = H; const ox = out.getContext('2d');
+  let simT = 0;
+  const step = () => { simT += STEP; h.update(STEP, simT); renderer.render(h.scene, h.camera); };
+  const simTo = (t) => { while (simT + STEP * 0.5 < t) step(); };
+  const sw = 64, shh = 36, sc = document.createElement('canvas'); sc.width = sw; sc.height = shh; const sx = sc.getContext('2d', { willReadFrequently: true });
+  const sig = () => { sx.drawImage(glc, 0, 0, sw, shh); const d = sx.getImageData(0, 0, sw, shh).data, g = new Float32Array(sw * shh); for (let i = 0; i < g.length; i++) g[i] = d[i * 4] * 0.3 + d[i * 4 + 1] * 0.59 + d[i * 4 + 2] * 0.11; return g; };
+  const diff = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s / a.length; };
+  R.plan = ({ t0, F, Lmin, Lmax }) => {
+    simTo(t0);
+    const n = Math.round(Lmax * FPS) + F, sigs = [];
+    for (let i = 0; i < n; i++) { step(); sigs.push(sig()); }
+    let best = null;
+    for (let L = Math.round(Lmin * FPS); L <= Math.round(Lmax * FPS); L++) {
+      let c = 0; for (let j = 0; j < F; j += 2) c += diff(sigs[L + j], sigs[j]);
+      c /= Math.ceil(F / 2);
+      if (!best || c < best.cost) best = { L, cost: +c.toFixed(3) };
+    }
+    best.seconds = +(best.L / FPS).toFixed(2);
+    best.selfDiff = +diff(sigs[0], sigs[Math.round(FPS)]).toFixed(3); // motion scale: frame 0 vs 1 s later
+    return best;
+  };
+  let head = [], k = 0, plan = null;
+  R.begin = ({ t0, F, L }) => {
+    simTo(t0); head = [];
+    for (let j = 0; j < F; j++) { step(); const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(glc, 0, 0); head.push(c); }
+    plan = { F, L }; k = F; return true;
+  };
+  R.next = () => {
+    const { F, L } = plan;
+    if (k >= L + F) return false;
+    step(); ox.globalAlpha = 1; ox.drawImage(glc, 0, 0);
+    if (k >= L) { const j = k - L, x = j / (F - 1), w = x * x * (3 - 2 * x); ox.globalAlpha = w; ox.drawImage(head[j], 0, 0); ox.globalAlpha = 1; }
+    k++; return true;
+  };
+  R.ready = true;
+} catch (e) { R.err = String(e && e.stack || e); }
+</script>

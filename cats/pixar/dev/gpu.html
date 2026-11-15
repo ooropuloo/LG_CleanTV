@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>gpu probe</title>
+<body style="background:#111;color:#9fd;font:16px monospace;white-space:pre-wrap"><div id="o"></div>
+<script>
+// 自己的測試頁:查無頭 Chrome 實際用哪張 GPU、WebGL2 上限。只讀資訊,不連網。
+const c = document.createElement('canvas'); const gl = c.getContext('webgl2', { powerPreference: 'high-performance' });
+const out = { ready: true };
+if (gl) {
+  const ext = gl.getExtension('WEBGL_debug_renderer_info');
+  out.renderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  out.vendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR);
+  out.maxTex3D = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+  out.maxVertUniform = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
+  out.maxSamples = gl.getParameter(gl.MAX_SAMPLES);
+  out.ua = navigator.userAgent;
+} else out.err = 'no webgl2';
+window.__cat = out; document.getElementById('o').textContent = JSON.stringify(out, null, 1);
+</script>

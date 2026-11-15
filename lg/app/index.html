@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<title>貓咪首頁</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #070a10; color: #fff;
+    font-family: "LG Smart UI", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", sans-serif; }
+  body { background: radial-gradient(120% 90% at 52% 40%, #1d2a44 0%, #0b111c 60%, #05070b 100%); }
+  .box { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); text-align: center; width: 80vw; }
+  .cat { width: 13vh; height: 13vh; margin: 0 auto 3vh; }
+  h1 { font-size: 6vh; margin: 0 0 2vh; font-weight: 700; }
+  p { font-size: 3vh; margin: 1vh 0; color: rgba(255,255,255,.75); }
+  .small { font-size: 2.2vh; color: rgba(255,255,255,.5); }
+  .dots::after { content: ""; animation: dots 1.4s steps(4) infinite; }
+  @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+  button { margin-top: 4vh; font: inherit; font-size: 3.4vh; font-weight: 600; color: #fff; background: #2f6fd6; border: 0;
+    border-radius: 2vh; padding: 2vh 6vh; outline: .5vh solid #fff; outline-offset: .4vh; cursor: pointer; }
+  #offline { display: none; }
+  body.offline #offline { display: block; } body.offline #booting { display: none; }
+</style>
+<script src="settings.js"></script>
+<script src="webos.js"></script>
+</head>
+<body>
+<div class="box">
+  <svg class="cat" viewBox="0 0 64 64"><path d="M12 54V20l8 8c3.5-2 7.5-3 12-3s8.5 1 12 3l8-8v34z" fill="#ffc35a"/><circle cx="25" cy="40" r="3" fill="#070a10"/><circle cx="39" cy="40" r="3" fill="#070a10"/></svg>
+  <div id="booting"><h1>貓咪首頁</h1><p class="dots">連線到家裡的主機</p></div>
+  <div id="offline">
+    <h1>連不到家裡的主機</h1>
+    <p>主機(<span id="addr"></span>)可能關機或網路斷了。</p>
+    <p class="small" id="next"></p>
+    <button id="retry">重試</button>
+    <p class="small" style="margin-top:4vh">按「返回」離開 · 也可以直接用遙控器的 Home 鍵開其他 App</p>
+  </div>
+</div>
+<script>
+(function () {
+  var q = {}; location.search.replace(/[?&]([^=&]+)=([^&]*)/g, function (_, k, v) { q[k] = decodeURIComponent(v); });
+  var bridge = String(q.bridge || (window.TVHOME && window.TVHOME.bridge) || '').replace(/\/+$/, '');
+  var boot = window.__boot = { state: 'probing', bridge: bridge, tries: 0 };
+  var delay = 5, timer = null, countdown = null, probing = false;
+  document.getElementById('addr').textContent = bridge || '未設定';
+  if (window.tvWebOS) window.tvWebOS.activate();
+
+  function offline() {
+    boot.state = 'offline'; document.body.className = 'offline';
+    document.getElementById('retry').focus();
+    var left = delay; clearInterval(countdown);
+    var next = document.getElementById('next');
+    next.textContent = left + ' 秒後自動重試';
+    countdown = setInterval(function () { left--; next.textContent = left > 0 ? left + ' 秒後自動重試' : '重試中…'; if (left <= 0) clearInterval(countdown); }, 1000);
+    clearTimeout(timer); timer = setTimeout(probe, delay * 1000);
+    delay = Math.min(60, delay * 2);
+  }
+
+  function probe() {
+    if (probing || !bridge) { if (!bridge) offline(); return; }
+    probing = true; boot.tries++; clearTimeout(timer);
+    var done = false;
+    var fail = function () { if (done) return; done = true; probing = false; offline(); };
+    var t = setTimeout(fail, 4000);
+    // no-cors: we only need "did the host answer", not the body (file:// origin, no CORS needed)
+    fetch(bridge + '/api/health?t=' + Date.now(), { mode: 'no-cors', cache: 'no-store' }).then(function () {
+      if (done) return; done = true; clearTimeout(t); boot.state = 'redirect';
+      location.replace(bridge + '/?tv=1');
+    }, function () { clearTimeout(t); fail(); });
+  }
+
+  // never a black screen: the boot text is visible from the first paint; if nothing happened in 6 s, show the offline screen
+  setTimeout(function () { if (boot.state === 'probing') { probing = false; offline(); } }, 6000);
+  document.getElementById('retry').addEventListener('click', function () { delay = 5; document.body.className = ''; boot.state = 'probing'; probe(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.keyCode === 13 && boot.state === 'offline') { e.preventDefault(); document.getElementById('retry').click(); }
+    if (e.keyCode === 461 || e.keyCode === 27) { e.preventDefault(); if (window.tvWebOS) window.tvWebOS.exit(); }
+  });
+  document.addEventListener('webOSRelaunch', function () { if (window.tvWebOS) window.tvWebOS.activate(); delay = 5; probe(); });
+  probe();
+})();
+</script>
+</body>
+</html>
