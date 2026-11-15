@@ -129,7 +129,7 @@ sudo sh bridge/run.sh                                           # build + 啟動
 npm install                       # 只裝 esbuild(devDependency)
 node dev/build_legacy.mjs         # web/ 或 web/legacy/ 的 JS 改過後都要重建;--check 檢查是否過期
 node dev/record_loop.mjs          # 每個場景錄一段無縫循環影片(需要 Chrome + ffmpeg),約 3 分鐘一個
-#   → cats/video/<scene>.mp4 + .jpg + index.json(影片不放進 git)
+#   → cats/video/<scene>.mp4 + .jpg + index.json(repo 已附 8 個場景的影片,共約 53 MB;新增場景時再錄)
 ```
 `web/legacy/app.legacy.js` 是產生的檔案,為了讓 clone 下來就能用而放進 git;不要手改。
 Chrome 不在預設位置時設 `CHROME=<chrome 執行檔路徑>`(`dev/shot.mjs`、`dev/homeshot.mjs`、`dev/record_loop.mjs` 都吃)。

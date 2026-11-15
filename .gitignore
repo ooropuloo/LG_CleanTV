@@ -23,7 +23,6 @@ factory/refs/*
 
 # media / generated assets (not in git: make them locally, see README)
 cats/**/assets/
-cats/video/
 cats/gen-live/*
 !cats/gen-live/index.js
 dev/ref/
@@ -41,3 +40,9 @@ dev/states.json
 *.ktx2
 *.hdr
 tapo_state*
+
+# 舊電視背景循環影片(AI 生成場景錄製)要放進 repo
+!cats/video/
+!cats/video/*.mp4
+!cats/video/*.jpg
+!cats/video/index.json
