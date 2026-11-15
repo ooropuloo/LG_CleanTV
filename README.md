@@ -75,6 +75,26 @@
 `web/index.html` 自動判斷(`'noModule' in script` 且有 `WebGL2RenderingContext` → 新版,否則 legacy);可用 `?legacy=1` / `?legacy=0` 強制。
 其他 webOS 版本沒測過:webOS 22–25 應該走新版(Chromium 94–120),但 dpr、效能、ACG 行為可能不同。
 
+## 用 Claude Code 一步一步裝(推薦)
+
+這個 repo 附了一個 Claude Code skill:`.claude/skills/lg-cleantv-setup/`。用 [Claude Code](https://claude.com/claude-code) 打開這個資料夾,說「幫我安裝貓咪首頁」,它會照下面的步驟一步一步帶你做、每步驗證,遇到問題也會查排錯表。
+
+**整體流程(8 步)**
+
+| # | 步驟 | 誰動手 | 完成的樣子 |
+|---|---|---|---|
+| 0 | 盤點:電視型號/IP、主機、HA、要放的實體 | 你回答問題 | 一張清單 |
+| 1 | 電視開 Developer Mode + Key Server | 你(遙控器) | 拿到電視 IP 與 Passphrase |
+| 2 | 電腦上跑模擬版 | Claude | 瀏覽器看到首頁 |
+| 3 | 主機部署 bridge(.env、config.json) | Claude;token 你自己貼 | `/api/health` 顯示 HA 已連線 |
+| 4 | 打包並安裝電視 App | Claude | 電視出現貓咪首頁 |
+| 5 | HA:webostv 配對 + 開機自動跳首頁 + 續期 | Claude;電視上你按「允許」 | 開機自動進首頁 |
+| 6 | (舊電視)legacy 版 + 循環影片 | Claude | webOS 4.x 也能用 |
+| 7 | 做貓場景 | 你出圖、Claude 處理 | 有自己的會動桌布 |
+| 8 | (選配)場景工廠 | Claude;agy 你自己登入 | 主機每週自動生新桌布 |
+
+不用 Claude Code 也可以照下方「安裝步驟」手動做。
+
 ## 安裝步驟
 
 需要:LG 電視(和主機同一個區網,建議有線並在路由器固定 IP)、一台一直開著的 Linux 主機(有 Docker;可以就是跑 HA 的那台)、
