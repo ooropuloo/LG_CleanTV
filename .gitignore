@@ -46,3 +46,5 @@ tapo_state*
 !cats/video/*.mp4
 !cats/video/*.jpg
 !cats/video/index.json
+!docs/images/
+!docs/images/*.png

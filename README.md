@@ -27,6 +27,11 @@
 
 ## 架構
 
+![架構圖](docs/images/architecture.png)
+
+<details><summary>文字版架構(細節)</summary>
+
+
 ```
    ┌──────────────── LG 電視 ────────────────┐
    │ webOS App(.ipk,Developer Mode 安裝)    │   開機頁只做一件事:探測 bridge,
@@ -50,6 +55,8 @@
    └────────────────────────────────────────────────────────────────────────┘
    HA 自動化:電視 off→on ⇒ webostv.command 開本 App;停在首頁 20 秒 ⇒ 每 6 天續期 Developer Mode
 ```
+
+</details>
 
 更多設計理由見 `DECISION.md`,開發筆記(API、設定欄位、量測)見 `docs/DEVNOTES.md`,
 貓場景契約見 `cats/README.md`,活圖引擎見 `cats/live/NOTES.md`,場景工廠見 `factory/README.md`。
